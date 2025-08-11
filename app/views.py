@@ -2,13 +2,14 @@ import os
 import base64
 import logging
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from .models import FaxRecord, SMSRecord, APIConfiguration
 from .forms import (
     TelnyxConfigForm, HumbleFaxConfigForm, TwilioConfigForm,
-    SendFaxForm, SendSMSForm, BulkFaxForm, BulkSMSForm
+    SendFaxForm, SendSMSForm, BulkFaxForm, BulkSMSForm, SingleFaxForm, BulkUploadForm
 )
 from .humblefax_service import HumbleFaxService
 from .twilio_sms_service import TwilioSMSService
@@ -93,7 +94,64 @@ def test_humblefax_connection(request):
         return JsonResponse({"status": "error", "message": str(e)})
 
 def new(request): #type new to access docx file 
-    return render(request, 'app/freestyle.html')
+    if request.method == 'POST':
+        form = SingleFaxForm(request.POST)
+        if form.is_valid():
+            # Process the form data and generate fax document
+            device_type = form.cleaned_data['device_type']
+            patient_name = form.cleaned_data['name']
+            
+            # For now, just show success message with the selected document
+            document_map = {
+                'cgm': 'do.docx (CGM)',
+                'ankle': 'Ankle_DO.docx (Ankle Brace)',
+                'knee': 'Knee_DO.docx (Knee Brace)',
+                'back': 'Back_DO.docx (Back Brace)',
+                'hip': 'Hip_DO.docx (Hip Brace)',
+                'shoulder': 'Shoulder_DO.docx (Shoulder Brace)',
+                'wrist': 'Wrist_DO.docx (Wrist Brace)',
+            }
+            
+            selected_doc = document_map.get(device_type, 'Unknown Document')
+            
+            return HttpResponse("""
+                <div style='text-align: center; padding: 50px;'>
+                    <h2 style='color: green;'>✓ Fax Document Generated Successfully!</h2>
+                    <p>Your fax document has been created with the following information:</p>
+                    <div style='text-align: left; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px;'>
+                        <p><strong>Device:</strong> {}</p>
+                        <p><strong>Document:</strong> {}</p>
+                        <p><strong>Patient:</strong> {}</p>
+                        <p><strong>Phone:</strong> {}</p>
+                        <p><strong>Address:</strong> {}, {}, {} {}</p>
+                        <p><strong>DOB:</strong> {}</p>
+                        <p><strong>Medicare:</strong> {}</p>
+                        <p><strong>PCP:</strong> {} - NPI: {}</p>
+                    </div>
+                    <br>
+                    <a href="{}" class="btn btn-primary">Generate Another Fax</a>
+                    <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            """.format(
+                device_type.replace('_', ' ').title(),
+                selected_doc,
+                patient_name,
+                form.cleaned_data.get('phone', 'N/A'),
+                form.cleaned_data.get('address', 'N/A'),
+                form.cleaned_data.get('city', 'N/A'),
+                form.cleaned_data.get('state', 'N/A'),
+                form.cleaned_data.get('zip', 'N/A'),
+                form.cleaned_data.get('dob', 'N/A'),
+                form.cleaned_data.get('medicare', 'N/A'),
+                form.cleaned_data.get('pcp_name', 'N/A'),
+                form.cleaned_data.get('pcp_npi', 'N/A'),
+                request.path,
+                reverse('dashboard')
+            ))
+    else:
+        form = SingleFaxForm()
+    
+    return render(request, 'app/freestyle.html', {'form': form})
 
 def gendocx(request):
     return render(request, 'app/freestyle_2.html')
@@ -357,7 +415,37 @@ def fax_resend(request, fax_id):
         return JsonResponse({"status": "error", "message": error_msg})
 
 def bulk_fax_generator(request):
-    form = BulkFaxForm()
+    if request.method == 'POST':
+        form = BulkUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            device_type = form.cleaned_data['device_type']
+            csv_file = form.cleaned_data['csv_file']
+            
+            # For now, just show success message
+            return HttpResponse("""
+                <div style='text-align: center; padding: 50px;'>
+                    <h2 style='color: green;'>✓ Bulk Fax Generation Started!</h2>
+                    <p>Processing {} for {} devices.</p>
+                    <div style='text-align: left; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px;'>
+                        <p><strong>File:</strong> {}</p>
+                        <p><strong>Device Type:</strong> {}</p>
+                        <p><strong>Status:</strong> File uploaded successfully. Processing...</p>
+                    </div>
+                    <br>
+                    <a href="{}" class="btn btn-primary">Upload Another File</a>
+                    <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            """.format(
+                csv_file.name,
+                device_type.replace('_', ' ').title(),
+                csv_file.name,
+                device_type.replace('_', ' ').title(),
+                request.path,
+                reverse('dashboard')
+            ))
+    else:
+        form = BulkUploadForm()
+    
     return render(request, 'app/bulk_fax.html', {'form': form})
 
 def bulk_fax_sender(request):

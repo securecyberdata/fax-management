@@ -1,22 +1,225 @@
 from django import forms
 from .models import APIConfiguration
 
-class UploadFileForm(forms.Form):
-    file = forms.FileField()
-
-class SingleSMSForm(forms.Form):
-    name = forms.CharField(max_length=100, label='Patient Name', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    pcp_name = forms.CharField(max_length=100, label='Doctor/PCP Name', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    phone = forms.CharField(max_length=20, label='Phone Number', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 1234567890'}))
-    device_name = forms.CharField(max_length=100, label='Device Name', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., CGM Device, Back Brace'}))
+class SingleFaxForm(forms.Form):
+    """Simple form for single fax generation"""
+    DEVICE_CHOICES = [
+        ('cgm', 'CGM (Continuous Glucose Monitor)'),
+        ('ankle', 'Ankle Brace'),
+        ('knee', 'Knee Brace'),
+        ('back', 'Back Brace'),
+        ('hip', 'Hip Brace'),
+        ('shoulder', 'Shoulder Brace'),
+        ('wrist', 'Wrist Brace'),
+    ]
     
-    def clean_phone(self):
-        phone = self.cleaned_data['phone']
-        # Remove all non-digit characters for validation
-        digits_only = ''.join(filter(str.isdigit, phone))
-        if len(digits_only) < 10:
-            raise forms.ValidationError("Phone number must have at least 10 digits.")
-        return phone
+    # Device Selection
+    device_type = forms.ChoiceField(
+        choices=DEVICE_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'required': True
+        }),
+        required=True,
+        label='Select Device Type'
+    )
+    
+    # Patient Information
+    name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter patient name'
+        }),
+        required=True,
+        label='Patient Name'
+    )
+    
+    phone = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Phone number'
+        }),
+        label='Phone'
+    )
+    
+    address = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Address'
+        }),
+        label='Address'
+    )
+    
+    city = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'City'
+        }),
+        label='City'
+    )
+    
+    state = forms.CharField(
+        max_length=2,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'State',
+            'maxlength': '2'
+        }),
+        label='State'
+    )
+    
+    zip = forms.CharField(
+        max_length=10,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'ZIP Code',
+            'maxlength': '10'
+        }),
+        label='ZIP'
+    )
+    
+    dob = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        }),
+        label='Date of Birth'
+    )
+    
+    medicare = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Medicare information'
+        }),
+        label='Medicare'
+    )
+    
+    # PCP Information
+    pcp_name = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Primary Care Physician name'
+        }),
+        label='PCP Name'
+    )
+    
+    pcp_address = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP address'
+        }),
+        label='PCP Address'
+    )
+    
+    pcp_city = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP city'
+        }),
+        label='PCP City'
+    )
+    
+    pcp_state = forms.CharField(
+        max_length=2,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP state',
+            'maxlength': '2'
+        }),
+        label='PCP State'
+    )
+    
+    pcp_zip = forms.CharField(
+        max_length=10,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP ZIP',
+            'maxlength': '10'
+        }),
+        label='PCP ZIP'
+    )
+    
+    pcp_phone = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP phone'
+        }),
+        label='PCP Phone'
+    )
+    
+    pcp_fax = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP fax'
+        }),
+        label='PCP Fax'
+    )
+    
+    pcp_npi = forms.CharField(
+        max_length=10,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'PCP NPI number'
+        }),
+        label='PCP NPI'
+    )
+
+class BulkUploadForm(forms.Form):
+    """Form for bulk fax generation from CSV/Excel files"""
+    DEVICE_CHOICES = [
+        ('cgm', 'CGM (Continuous Glucose Monitor)'),
+        ('ankle', 'Ankle Brace'),
+        ('knee', 'Knee Brace'),
+        ('back', 'Back Brace'),
+        ('hip', 'Hip Brace'),
+        ('shoulder', 'Shoulder Brace'),
+        ('wrist', 'Wrist Brace'),
+    ]
+    
+    device_type = forms.ChoiceField(
+        choices=DEVICE_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'required': True
+        }),
+        required=True,
+        label='Select Device Type for All Records'
+    )
+    
+    csv_file = forms.FileField(
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.csv,.xlsx,.xls'
+        }),
+        required=True,
+        label='Upload CSV or Excel File',
+        help_text='File should contain columns: name, phone, address, city, state, zip, dob, medicare, pcp_name, pcp_address, pcp_city, pcp_state, pcp_zip, pcp_phone, pcp_fax, pcp_npi'
+    )
 
 class TelnyxConfigForm(forms.ModelForm):
     """Form for Telnyx API configuration"""

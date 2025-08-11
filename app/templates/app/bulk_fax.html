@@ -1,89 +1,208 @@
 {% extends 'app/base.html' %}
 
+{% block title %}Bulk Fax Generation{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <h2>Bulk Fax Generator</h2>
-    
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-layer-group"></i> Bulk Fax Generation
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="bulkFaxForm">
+                        {% csrf_token %}
+                        
+                        <!-- Device Selection -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-cog"></i> Device Selection
+                                </h5>
+                                <div class="form-group">
+                                    <label for="{{ form.device_type.id_for_label }}" class="form-label">Select Device Type for All Records <span class="text-danger">*</span></label>
+                                    {{ form.device_type }}
+                                    {% if form.device_type.errors %}
+                                        <div class="text-danger">{{ form.device_type.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">This device type will be applied to all records in your file.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-upload"></i> File Upload
+                                </h5>
+                                <div class="form-group">
+                                    <label for="{{ form.csv_file.id_for_label }}" class="form-label">Upload CSV or Excel File <span class="text-danger">*</span></label>
+                                    {{ form.csv_file }}
+                                    {% if form.csv_file.errors %}
+                                        <div class="text-danger">{{ form.csv_file.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.csv_file.help_text }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg me-3">
+                                    <i class="fas fa-upload"></i> Process File & Generate Faxes
+                                </button>
+                                <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        {% endfor %}
     </div>
-    {% endif %}
-    
-    <div class="card">
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label for="{{ form.file.id_for_label }}" class="form-label">Upload CSV or Excel File</label>
-                    {{ form.file }}
-                    {% if form.file.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.file.errors }}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="mb-3">
-                    <label for="template_type" class="form-label">Select Template</label>
-                    <select name="template_type" id="template_type" class="form-select">
-                        <option value="do.docx">CGM Template</option>
-                        <option value="Back_DO.docx">Back Brace</option>
-                        <option value="Ankle_DO.docx">Ankle Brace</option>
-                        <option value="Hip_DO.docx">Hip Brace</option>
-                        <option value="Elbow_DO.docx">Elbow Brace</option>
-                        <option value="Shoulder_DO.docx">Shoulder Brace</option>
-                    </select>
-                </div>
-                
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="auto_send" name="auto_send" value="true">
-                        <label class="form-check-label" for="auto_send">
-                            <i class="fas fa-paper-plane me-2"></i>Automatically send faxes to PCP after generation
-                        </label>
-                    </div>
-                    <small class="form-text text-muted">
-                        If checked, faxes will be automatically sent to the PCP fax numbers provided in your CSV/Excel file.
-                    </small>
-                </div>
-                
-                <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">Generate Faxes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
+
+    <!-- Instructions Card -->
     <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle"></i> File Format Instructions
+            </h5>
+        </div>
         <div class="card-body">
-            <h5 class="card-title">Instructions</h5>
-            <p>Upload a CSV or Excel file containing the following columns:</p>
-            <ul>
-                <li><strong>name</strong></li>
-                <li><strong>dob</strong></li>
-                <li><strong>phone</strong></li>
-                <li><strong>address</strong></li>
-                <li><strong>city</strong></li>
-                <li><strong>state</strong></li>
-                <li><strong>zip</strong></li>
-                <li><strong>medicare</strong></li>
-                <li><strong>pcp_name</strong></li>
-                <li><strong>pcp_address</strong></li>
-                <li><strong>pcp_city</strong></li>
-                <li><strong>pcp_state</strong></li>
-                <li><strong>pcp_zip</strong></li>
-                <li><strong>pcp_phone</strong></li>
-                <li><strong>pcp_fax</strong></li>
-                <li><strong>pcp_npi</strong></li>
-            </ul>
-            <p>The system will generate a ZIP file containing all the fax documents.</p>
+            <p class="mb-3">Upload a CSV or Excel file containing the following columns:</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">Patient Information</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>name</strong> - Patient's full name</li>
+                        <li><strong>phone</strong> - Patient's phone number</li>
+                        <li><strong>address</strong> - Patient's street address</li>
+                        <li><strong>city</strong> - Patient's city</li>
+                        <li><strong>state</strong> - Patient's state (2-letter code)</li>
+                        <li><strong>zip</strong> - Patient's ZIP code</li>
+                        <li><strong>dob</strong> - Date of birth (YYYY-MM-DD format)</li>
+                        <li><strong>medicare</strong> - Medicare information</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-primary">PCP Information</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>pcp_name</strong> - Primary Care Physician name</li>
+                        <li><strong>pcp_address</strong> - PCP office address</li>
+                        <li><strong>pcp_city</strong> - PCP city</li>
+                        <li><strong>pcp_state</strong> - PCP state (2-letter code)</li>
+                        <li><strong>pcp_zip</strong> - PCP ZIP code</li>
+                        <li><strong>pcp_phone</strong> - PCP phone number</li>
+                        <li><strong>pcp_fax</strong> - PCP fax number</li>
+                        <li><strong>pcp_npi</strong> - PCP NPI number</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="alert alert-warning mt-3">
+                <strong>Note:</strong> The system will generate fax documents based on the selected device type for all records in your file. 
+                Make sure your CSV/Excel file has the exact column names shown above.
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.text-danger {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.text-primary {
+    color: #0d6efd !important;
+}
+
+.text-info {
+    color: #0dcaf0 !important;
+}
+
+.list-unstyled li {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+}
+</style>
+
+<script>
+document.getElementById('bulkFaxForm').addEventListener('submit', function(e) {
+    const deviceType = document.getElementById('{{ form.device_type.id_for_label }}').value;
+    if (!deviceType) {
+        e.preventDefault();
+        alert('Please select a device type.');
+        return false;
+    }
+    
+    const fileInput = document.getElementById('{{ form.csv_file.id_for_label }}');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Please select a file to upload.');
+        return false;
+    }
+    
+    const file = fileInput.files[0];
+    const allowedTypes = ['.csv', '.xlsx', '.xls'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+        e.preventDefault();
+        alert('Please select a valid CSV or Excel file (.csv, .xlsx, .xls)');
+        return false;
+    }
+    
+    return true;
+});
+</script>
 {% endblock %} 

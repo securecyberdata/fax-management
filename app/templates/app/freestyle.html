@@ -1,205 +1,272 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <title>freestyle</title>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% extends 'app/base.html' %}
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="./css/style.css"/>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  </head>
-  
-  <style>
-    *{
-    margin: 0%;
-    padding: 0%;
-    
-}
-.starting{
-    font-weight: 700;
-    
+{% block title %}Single Fax Generation{% endblock %}
 
-}
-.box{
-    border: black solid 1px;
-    padding: 10px;
-}
-table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-    padding: 10px;
-  }
-.facesheet{
-    font-size: 12px;
-}
-.med{
-    color: darkblue;
-    font-weight: 600;
-}
-.med1{
-    color: darkblue;
-    
-}
-  </style>
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-medical"></i> Single Fax Generation
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="singleFaxForm">
+                        {% csrf_token %}
+                        
+                        <!-- Device Selection -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-cog"></i> Device Selection
+                                </h5>
+                                <div class="form-group">
+                                    <label for="{{ form.device_type.id_for_label }}" class="form-label">Select Device Type <span class="text-danger">*</span></label>
+                                    {{ form.device_type }}
+                                    {% if form.device_type.errors %}
+                                        <div class="text-danger">{{ form.device_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
 
-  <body>
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8">
-        <br><br>
-          <b>PLEASE RETURN FAX WITH RECENT OFFICE NOTES AND MEDICATION LIST </b></div>
-          
-        <div class="col-md-4"><img src="./images/freestyle.png"/></div>
-      </div>
-      <div class="row">
-        <div class="col-md-8">
-          <span class="med">Medicare Detailed Written Order</span>
-          <ol style="font-weight: 600; font-size: small;">
-            <br>
-            <li>Complete all fields on this Detailed Written Order</li>
-            <li>Use the Noridian November 2017 Physician Resource Letter (Continuous Glucose Monitors) to<br>
-              confirm coverage criteria and medical necessity documentation requirements are met.</li>
-            <li>Fax both this order and the patient’s most recent medical records that demonstrate coverage criteria
-              <br>are met to a DME supplier that provides the Free Style Libre 14 day system.
-              </li>
+                        <!-- Patient Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-user"></i> Patient Information
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.name.id_for_label }}" class="form-label">Patient Name <span class="text-danger">*</span></label>
+                                            {{ form.name }}
+                                            {% if form.name.errors %}
+                                                <div class="text-danger">{{ form.name.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                                            {{ form.phone }}
+                                            {% if form.phone.errors %}
+                                                <div class="text-danger">{{ form.phone.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                                            {{ form.address }}
+                                            {% if form.address.errors %}
+                                                <div class="text-danger">{{ form.address.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                                                    {{ form.city }}
+                                                    {% if form.city.errors %}
+                                                        <div class="text-danger">{{ form.city.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label for="{{ form.state.id_for_label }}" class="form-label">State</label>
+                                                    {{ form.state }}
+                                                    {% if form.state.errors %}
+                                                        <div class="text-danger">{{ form.state.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label for="{{ form.zip.id_for_label }}" class="form-label">ZIP</label>
+                                                    {{ form.zip }}
+                                                    {% if form.zip.errors %}
+                                                        <div class="text-danger">{{ form.zip.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.dob.id_for_label }}" class="form-label">Date of Birth</label>
+                                            {{ form.dob }}
+                                            {% if form.dob.errors %}
+                                                <div class="text-danger">{{ form.dob.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.medicare.id_for_label }}" class="form-label">Medicare</label>
+                                            {{ form.medicare }}
+                                            {% if form.medicare.errors %}
+                                                <div class="text-danger">{{ form.medicare.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- PCP Information -->
+                                    <div class="col-md-6">
+                                        <h6 class="text-secondary mb-3">Primary Care Physician (PCP)</h6>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.pcp_name.id_for_label }}" class="form-label">PCP Name</label>
+                                            {{ form.pcp_name }}
+                                            {% if form.pcp_name.errors %}
+                                                <div class="text-danger">{{ form.pcp_name.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.pcp_address.id_for_label }}" class="form-label">PCP Address</label>
+                                            {{ form.pcp_address }}
+                                            {% if form.pcp_address.errors %}
+                                                <div class="text-danger">{{ form.pcp_address.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label for="{{ form.pcp_city.id_for_label }}" class="form-label">PCP City</label>
+                                                    {{ form.pcp_city }}
+                                                    {% if form.pcp_city.errors %}
+                                                        <div class="text-danger">{{ form.pcp_city.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label for="{{ form.pcp_state.id_for_label }}" class="form-label">PCP State</label>
+                                                    {{ form.pcp_state }}
+                                                    {% if form.pcp_state.errors %}
+                                                        <div class="text-danger">{{ form.pcp_state.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label for="{{ form.pcp_zip.id_for_label }}" class="form-label">PCP ZIP</label>
+                                                    {{ form.pcp_zip }}
+                                                    {% if form.pcp_zip.errors %}
+                                                        <div class="text-danger">{{ form.pcp_zip.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.pcp_phone.id_for_label }}" class="form-label">PCP Phone</label>
+                                            {{ form.pcp_phone }}
+                                            {% if form.pcp_phone.errors %}
+                                                <div class="text-danger">{{ form.pcp_phone.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.pcp_fax.id_for_label }}" class="form-label">PCP Fax</label>
+                                            {{ form.pcp_fax }}
+                                            {% if form.pcp_fax.errors %}
+                                                <div class="text-danger">{{ form.pcp_fax.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.pcp_npi.id_for_label }}" class="form-label">PCP NPI</label>
+                                            {{ form.pcp_npi }}
+                                            {% if form.pcp_npi.errors %}
+                                                <div class="text-danger">{{ form.pcp_npi.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-          </ol>
-        </div>
-        <div class="col-md-4"> <b class="med">Return Fax:</b></div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <span class="med">Patient Information </span><br><br>
-          <span>Patient Name: <u> {{name}} </u> </span>  <span style="float:right;">Date of Birth: <ul> {{dob}} </ul> </span> <br>
-          <span>Phone: {{phone}}</span> <span> Email: {{email}}</span><br>
-          <span>Address: {{address}}</span> <span> City: {{city}} </span> <span>State: ___________ </span> <span>Zip: ____________________</span><br>
-          <span>Primary Insurance: ___________________________________</span> <span> Primary Insurance Member ID: ____________________________________</span><br>
-          <span>Secondary Insurance: ________________________________________ </span> <span>Secondary Insurance Member ID: _________________________</span><br>
-          <span>Notes: -__________________________________________________________________________________</span><br><br>
-          <b>___________________________________________________________________________________________________________________________________</b><br><br>
-          
-          <span class="med">Physician Information </span><br><br>
-          <span>Physician Name: _______________________________________________________</span> <span> Phone: __________________________________</span><br>
-          <span>NPI: _________________________________________</span> <span> Fax: -_________________________________________________</span><br>
-          <span>Address: ___________________________________________ </span> <span>City: ______________</span> <span> State: ___________</span> <span> Zip: ____________________</span><br><br>
-
-          <b class="med1">Order Detail</b><br><br>
-          <b class="med1">Order Date </b> <span class="med"> __ /__ /____</span>
-        </div>
-        
-      </div><br>
-      <div class="row">
-        <div class="col-md-12">
-          <table style="width:80%">
-            <tr>
-              <th>K0554 (Free Style Libre 14 day Reader)</th>
-              <th>K0553 (Free Style Libre 14 day Sensors)</th> 
-              
-            </tr>
-            <tr>
-              <td>1 Reader/1095 Days <br>Length of Need: Lifetime-unless specified otherwise:</td>
-              <td>1 Unit/30 Days (1 Unit = 1 month of sensors and supplies)<br>Length of Need: Lifetime-unless specified otherwise:  </td>
-             
-            </tr>
-            
-            <tr>
-              <td>____________________________________________________________________</td>
-              <td>____________________________________________________________________</td>
-              
-            </tr>
-          </table>
-          <br> <span class="med">Diagnosis (ICD10):</span><br><br>
-          </div>
-        </div>
-        
-        <div class="row">            
-          <div class="col-md-1">
-            
-          </div>
-          <div class="col-md-11">
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
-              <label class="form-check-label" for="inlineCheckbox1">E10.9</label>
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg me-3">
+                                    <i class="fas fa-file-medical"></i> Generate Fax Document
+                                </button>
+                                <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-              <label class="form-check-label" for="inlineCheckbox2">E11.65</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-              <label class="form-check-label" for="inlineCheckbox2">E10.65</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-              <label class="form-check-label" for="inlineCheckbox2">E11.8</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-              <label class="form-check-label" for="inlineCheckbox2">E11.9</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-              <label class="form-check-label" for="inlineCheckbox2">Other: ________</label>
-            </div>
-            
-          </div><br>
         </div>
-
-        <div class="row">
-          
-          <div class="col-md-12">
-           <span class="med">Prescribed Number of Glucose Tests Per Day:</span>     __________<br><br>
-           <span class="med">Current Insulin Regimen:</span><br>
-           
-          </div>
-        </div>
-
-        <div class="row">
-          
-          <div class="col-md-3">
-            <input type="checkbox" name="check" value="check">
-            <label for="check"> Insulin Pump</label></div>
-          <div class="col-md-6">
-            <input type="checkbox"name="check" value="check">
-            <label for="check"> Multiple Daily Injections-Number Per Day:____________</label></div>
-          <div class="col-md-2">
-              <input type="checkbox" name="check" value="check">
-              <label for="check"> Other: ___________</label></div><br><br>
-        </div>
-        <div class="row">
-          <div class="col-md-12">
-            <b class="facesheet">I certify that I am the physician identified in the “Physician Information” section above and hereby attest that the medical necessity<br>
-              information is true, accurate, and complete to the best of my knowledge. I understand that any falsification, omission, or concealment of<br>
-              material fact may subject me to administrative, civil, or criminal liability. The patient/caregiver is capable and has successfully<br>
-              completed or will be trained on the proper use of the products prescribed on this order.<br>
-            </b>
-            <br>
-            <img src="./images/pngtree-vector-right-arrow-icon-png-image_956430-removebg-preview.png" style="width: 50px; height: 50px; margin-top: -8px;">
-
-            <b>Physician Signature: _______________________________________________________ Date: __________________________________</b><b> "Selected Here"</b><br><br>
-
-            <b class="facesheet">It is ultimately the responsibility of the healthcare professional/persons associated with the patient’s care to determine and document the appropriate<br>
-              diagnosis (es) and code(s) for the patient’s condition. Abbott does not guarantee that the use of any information provided in this form will result in<br>
-              coverage or payment by any third-party payer. Each healthcare provider is ultimately responsible for verifying codes, coverage, and payment policies<br>
-              used to ensure that they are accurate for the services and items provided.<br>
-              See reverse for Indications and Important Safety Information.
-            </b>
-          </div>
-        </div>
-        <br><br>
-        <a href="./index.html"> <button class="btn btn-success">Previous Page</button></a><br><br><br>
-        
-        
-
     </div>
-     
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.text-danger {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.text-primary {
+    color: #0d6efd !important;
+}
+
+.text-secondary {
+    color: #6c757d !important;
+}
+</style>
+
+<script>
+document.getElementById('singleFaxForm').addEventListener('submit', function(e) {
+    const deviceType = document.getElementById('{{ form.device_type.id_for_label }}').value;
+    if (!deviceType) {
+        e.preventDefault();
+        alert('Please select a device type.');
+        return false;
+    }
     
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-  </body>
-</html>
+    const patientName = document.getElementById('{{ form.name.id_for_label }}').value;
+    if (!patientName.trim()) {
+        e.preventDefault();
+        alert('Please enter patient name.');
+        return false;
+    }
+    
+    return true;
+});
+</script>
+{% endblock %}
