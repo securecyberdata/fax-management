@@ -178,6 +178,40 @@
                             </div>
                         </div>
 
+                        <!-- Fax Sending Options -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-fax"></i> Fax Sending Options
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="send_fax" name="send_fax">
+                                            <label class="form-check-label" for="send_fax">
+                                                <strong>Send Fax via HumbleFax</strong>
+                                            </label>
+                                            <small class="form-text text-muted d-block">
+                                                Check this box to automatically send the generated document as a fax
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="fax_number" class="form-label">Fax Number <span class="text-danger">*</span></label>
+                                            <input type="tel" class="form-control" id="fax_number" name="fax_number" 
+                                                   placeholder="+1 (555) 123-4567" 
+                                                   pattern="[\+]?[1-9][\d]{0,15}"
+                                                   title="Please enter a valid fax number">
+                                            <small class="form-text text-muted">
+                                                Enter the fax number where you want to send this document
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Submit Buttons -->
                         <div class="row">
                             <div class="col-12 text-center">
@@ -266,7 +300,38 @@ document.getElementById('singleFaxForm').addEventListener('submit', function(e) 
         return false;
     }
     
+    // Check if sending fax is enabled
+    const sendFax = document.getElementById('send_fax').checked;
+    if (sendFax) {
+        const faxNumber = document.getElementById('fax_number').value.trim();
+        if (!faxNumber) {
+            e.preventDefault();
+            alert('Please enter a fax number when sending fax is enabled.');
+            return false;
+        }
+        
+        // Basic fax number validation
+        const faxPattern = /^[\+]?[1-9][\d]{0,15}$/;
+        if (!faxPattern.test(faxNumber.replace(/[\s\-\(\)]/g, ''))) {
+            e.preventDefault();
+            alert('Please enter a valid fax number.');
+            return false;
+        }
+    }
+    
     return true;
+});
+
+// Show/hide fax number field based on checkbox
+document.getElementById('send_fax').addEventListener('change', function() {
+    const faxNumberField = document.getElementById('fax_number');
+    if (this.checked) {
+        faxNumberField.required = true;
+        faxNumberField.parentElement.style.display = 'block';
+    } else {
+        faxNumberField.required = false;
+        faxNumberField.parentElement.style.display = 'block';
+    }
 });
 </script>
 {% endblock %}

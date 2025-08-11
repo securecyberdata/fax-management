@@ -7,12 +7,33 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 class HumbleFaxService:
-    def __init__(self):
-        # HumbleFax API configuration with Access Key and Secret Key
-        self.access_key = getattr(settings, 'HUMBLEFAX_ACCESS_KEY', 'your_humblefax_access_key_here')
-        self.secret_key = getattr(settings, 'HUMBLEFAX_SECRET_KEY', 'your_humblefax_secret_key_here')
+    def __init__(self, access_key=None, secret_key=None, from_number=None):
+        # HumbleFax API configuration - can be passed in or retrieved from database
+        if access_key and secret_key:
+            self.access_key = access_key
+            self.secret_key = secret_key
+            self.from_number = from_number or '+1234567890'
+        else:
+            # Try to get from database first, then fall back to settings
+            try:
+                from .models import APIConfiguration
+                config = APIConfiguration.objects.filter(service='humblefax', is_active=True).first()
+                if config:
+                    self.access_key = config.api_key
+                    self.secret_key = config.secret_key
+                    self.from_number = config.from_number or '+1234567890'
+                else:
+                    # Fall back to settings
+                    self.access_key = getattr(settings, 'HUMBLEFAX_ACCESS_KEY', '')
+                    self.secret_key = getattr(settings, 'HUMBLEFAX_SECRET_KEY', '')
+                    self.from_number = getattr(settings, 'HUMBLEFAX_FROM_NUMBER', '+1234567890')
+            except:
+                # Fall back to settings if database access fails
+                self.access_key = getattr(settings, 'HUMBLEFAX_ACCESS_KEY', '')
+                self.secret_key = getattr(settings, 'HUMBLEFAX_SECRET_KEY', '')
+                self.from_number = getattr(settings, 'HUMBLEFAX_FROM_NUMBER', '+1234567890')
+        
         self.base_url = "https://api.humblefax.com"
-        self.from_number = getattr(settings, 'HUMBLEFAX_FROM_NUMBER', '+1234567890')
         
     def _get_auth_headers(self):
         """
@@ -323,15 +344,22 @@ class HumbleFaxService:
             # Create a new temporary fax with the same details
             headers = self._get_auth_headers()
             
+            # Clean fax numbers - remove +, hyphens, spaces, and parentheses
+            clean_from_number = original_fax.get('from', self.from_number).replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
+            clean_to_number = original_fax.get('to', '').replace('+', '').replace(' ', '').replace('(', '').replace(')', '')
+            
+            logger.info(f"Resend - Original from_number: {original_fax.get('from', self.from_number)}, cleaned: {clean_from_number}")
+            logger.info(f"Resend - Original to_number: {original_fax.get('to', '')}, cleaned: {clean_to_number}")
+            
             payload = {
                 "toName": "Resend Recipient",
                 "fromName": "Medical Office",
                 "subject": f"Resend: {original_fax.get('subject', 'Medical Order')}",
                 "message": f"Resending: {original_fax.get('message', 'Medical Order')}",
                 "companyInfo": original_fax.get('company_info', 'Medical Office'),
-                "fromNumber": int(original_fax.get('from', self.from_number).replace('+', '')),
-                "recipients": [int(original_fax.get('to', '').replace('+', ''))],
-                "resolution": original_fax.get('resolution', 'Fine'),
+                "fromNumber": clean_from_number,
+                "recipients": [clean_to_number],
+                "resolution": "Fine",
                 "pageSize": original_fax.get('page_size', 'Letter'),
                 "includeCoversheet": True
             }
@@ -458,6 +486,13 @@ class HumbleFaxService:
         try:
             headers = self._get_auth_headers()
             
+            # Clean fax numbers - remove +, hyphens, spaces, and parentheses
+            clean_from_number = self.from_number.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
+            clean_to_number = to_number.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
+            
+            logger.info(f"Original from_number: {self.from_number}, cleaned: {clean_from_number}")
+            logger.info(f"Original to_number: {to_number}, cleaned: {clean_to_number}")
+            
             # Prepare the temporary fax payload
             payload = {
                 "toName": patient_name or "Recipient",
@@ -465,8 +500,8 @@ class HumbleFaxService:
                 "subject": f"Medical Order - {patient_name}" if patient_name else "Medical Order",
                 "message": f"Please find attached medical order for {patient_name}" if patient_name else "Please find attached medical order",
                 "companyInfo": "Medical Office",
-                "fromNumber": int(self.from_number.replace('+', '')),
-                "recipients": [int(to_number.replace('+', ''))],
+                "fromNumber": clean_from_number,
+                "recipients": [clean_to_number],
                 "resolution": "Fine",
                 "pageSize": "Letter",
                 "includeCoversheet": True

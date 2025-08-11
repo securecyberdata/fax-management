@@ -132,13 +132,114 @@ def new(request): #type new to access docx file
                 with open(temp_path, 'rb') as f:
                     file_content = f.read()
                 
-                # Clean up temporary file
-                os.remove(temp_path)
+                # Check if user wants to send fax
+                send_fax = request.POST.get('send_fax') == 'on'
+                fax_number = request.POST.get('fax_number', '').strip()
                 
-                # Return the file for download
-                response = HttpResponse(file_content, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-                response['Content-Disposition'] = f'attachment; filename="{filename}"'
-                return response
+                if send_fax and fax_number:
+                    # Check if HumbleFax is configured
+                    humblefax_config = APIConfiguration.objects.filter(service='humblefax', is_active=True).first()
+                    if not humblefax_config:
+                        # Clean up temporary file
+                        os.remove(temp_path)
+                        return HttpResponse("""
+                            <div style='text-align: center; padding: 50px;'>
+                                <h2 style='color: red;'>✗ HumbleFax Not Configured</h2>
+                                <p>Please configure HumbleFax API settings first to send faxes.</p>
+                                <br>
+                                <a href="{}" class="btn btn-primary">Configure API</a>
+                                <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                            </div>
+                        """.format(
+                            reverse('api_configuration'),
+                            reverse('dashboard')
+                        ))
+                    
+                    try:
+                        # Send fax using HumbleFax
+                        humblefax = HumbleFaxService(
+                            access_key=humblefax_config.api_key,
+                            secret_key=humblefax_config.secret_key,
+                            from_number=humblefax_config.from_number
+                        )
+                        fax_result = humblefax.send_fax(fax_number, file_content, filename, form_data.get('name'))
+                        
+                        if fax_result['success']:
+                            # Save fax record to database
+                            FaxRecord.objects.create(
+                                fax_id=fax_result.get('fax_id', ''),
+                                to_number=fax_number,
+                                from_number=humblefax_config.from_number or '+1234567890',
+                                status='sent',
+                                subject=f"Medical Order - {device_type.replace('_', ' ').title()}",
+                                patient_name=form_data.get('name', ''),
+                                device_type=device_type
+                            )
+                            
+                            # Clean up temporary file
+                            os.remove(temp_path)
+                            
+                            return HttpResponse("""
+                                <div style='text-align: center; padding: 50px;'>
+                                    <h2 style='color: green;'>✓ Fax Sent Successfully!</h2>
+                                    <p>Document generated and fax sent to {}</p>
+                                    <p>Fax ID: {}</p>
+                                    <br>
+                                    <a href="{}" class="btn btn-primary">Send Another Fax</a>
+                                    <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                                </div>
+                            """.format(
+                                fax_number,
+                                fax_result.get('fax_id', 'N/A'),
+                                request.path,
+                                reverse('dashboard')
+                            ))
+                        else:
+                            # Clean up temporary file
+                            os.remove(temp_path)
+                            
+                            return HttpResponse("""
+                                <div style='text-align: center; padding: 50px;'>
+                                    <h2 style='color: orange;'>⚠ Document Generated, Fax Failed</h2>
+                                    <p>Document was generated successfully, but fax sending failed.</p>
+                                    <p>Error: {}</p>
+                                    <br>
+                                    <a href="{}" class="btn btn-primary">Try Again</a>
+                                    <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                                </div>
+                            """.format(
+                                fax_result.get('error', 'Unknown error'),
+                                request.path,
+                                reverse('dashboard')
+                            ))
+                            
+                    except Exception as e:
+                        # Clean up temporary file
+                        os.remove(temp_path)
+                        
+                        return HttpResponse("""
+                            <div style='text-align: center; padding: 50px;'>
+                                <h2 style='color: orange;'>⚠ Document Generated, Fax Failed</h2>
+                                <p>Document was generated successfully, but fax sending failed.</p>
+                                <p>Error: {}</p>
+                                <br>
+                                <a href="{}" class="btn btn-primary">Try Again</a>
+                                <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                            </div>
+                        """.format(
+                            str(e),
+                            request.path,
+                            reverse('dashboard')
+                        ))
+                else:
+                    # Just download the document
+                    # Clean up temporary file
+                    os.remove(temp_path)
+                    
+                    # Return the file for download
+                    response = HttpResponse(file_content, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                    return response
                 
             except Exception as e:
                 # If document generation fails, show error message
@@ -442,64 +543,185 @@ def bulk_fax_generator(request):
                 if not records:
                     return HttpResponse("No records found in the CSV file.")
                 
-                # Generate documents for each record
-                doc_generator = DocumentGenerator()
-                generated_files = []
+                # Check if user wants to send faxes
+                send_faxes = request.POST.get('send_faxes') == 'on'
                 
-                for i, record in enumerate(records):
-                    try:
-                        # Convert CSV record to form data format
-                        form_data = {
-                            'name': record.get('name', ''),
-                            'phone': record.get('phone', ''),
-                            'address': record.get('address', ''),
-                            'city': record.get('city', ''),
-                            'state': record.get('state', ''),
-                            'zip': record.get('zip', ''),
-                            'dob': record.get('dob', ''),
-                            'medicare': record.get('medicare', ''),
-                            'pcp_name': record.get('pcp_name', ''),
-                            'pcp_address': record.get('pcp_address', ''),
-                            'pcp_city': record.get('pcp_city', ''),
-                            'pcp_state': record.get('pcp_state', ''),
-                            'pcp_zip': record.get('pcp_zip', ''),
-                            'pcp_phone': record.get('pcp_phone', ''),
-                            'pcp_fax': record.get('pcp_fax', ''),
-                            'pcp_npi': record.get('pcp_npi', ''),
-                        }
-                        
-                        # Generate document
-                        temp_path, filename = doc_generator.generate_from_template(form_data, device_type)
-                        generated_files.append((temp_path, filename))
-                        
-                    except Exception as e:
-                        print(f"Error processing record {i+1}: {e}")
-                        continue
-                
-                if not generated_files:
-                    return HttpResponse("Failed to generate any documents. Please check your CSV format.")
-                
-                # Create a ZIP file containing all generated documents
-                import zipfile
-                zip_path = os.path.join(tempfile.gettempdir(), f"bulk_fax_{device_type}.zip")
-                
-                with zipfile.ZipFile(zip_path, 'w') as zipf:
-                    for temp_path, filename in generated_files:
-                        zipf.write(temp_path, filename)
-                        # Clean up individual temp files
-                        os.remove(temp_path)
-                
-                # Read and return the ZIP file
-                with open(zip_path, 'rb') as f:
-                    zip_content = f.read()
-                
-                # Clean up ZIP file
-                os.remove(zip_path)
-                
-                # Return the ZIP file for download
-                response = HttpResponse(zip_content, content_type='application/zip')
-                response['Content-Disposition'] = f'attachment; filename="bulk_fax_{device_type}.zip"'
-                return response
+                if send_faxes:
+                    # Check if HumbleFax is configured
+                    humblefax_config = APIConfiguration.objects.filter(service='humblefax', is_active=True).first()
+                    if not humblefax_config:
+                        return HttpResponse("""
+                            <div style='text-align: center; padding: 50px;'>
+                                <h2 style='color: red;'>✗ HumbleFax Not Configured</h2>
+                                <p>Please configure HumbleFax API settings first to send faxes.</p>
+                                <br>
+                                <a href="{}" class="btn btn-primary">Configure API</a>
+                                <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                            </div>
+                        """.format(
+                            reverse('api_configuration'),
+                            reverse('dashboard')
+                        ))
+                    
+                    # Send faxes for each record
+                    humblefax = HumbleFaxService(
+                        access_key=humblefax_config.api_key,
+                        secret_key=humblefax_config.secret_key,
+                        from_number=humblefax_config.from_number
+                    )
+                    results = []
+                    successful_sends = 0
+                    failed_sends = 0
+                    
+                    for i, record in enumerate(records):
+                        try:
+                            # Convert CSV record to form data format
+                            form_data = {
+                                'name': record.get('name', ''),
+                                'phone': record.get('phone', ''),
+                                'address': record.get('address', ''),
+                                'city': record.get('city', ''),
+                                'state': record.get('state', ''),
+                                'zip': record.get('zip', ''),
+                                'dob': record.get('dob', ''),
+                                'medicare': record.get('medicare', ''),
+                                'pcp_name': record.get('pcp_name', ''),
+                                'pcp_address': record.get('pcp_address', ''),
+                                'pcp_city': record.get('pcp_city', ''),
+                                'pcp_state': record.get('pcp_state', ''),
+                                'pcp_zip': record.get('pcp_zip', ''),
+                                'pcp_phone': record.get('pcp_phone', ''),
+                                'pcp_fax': record.get('pcp_fax', ''),
+                                'pcp_npi': record.get('pcp_npi', ''),
+                            }
+                            
+                            # Get fax number from record
+                            fax_number = record.get('pcp_fax', '').strip()
+                            if not fax_number:
+                                results.append(f"Record {i+1} ({form_data.get('name', 'Unknown')}): No fax number provided")
+                                failed_sends += 1
+                                continue
+                            
+                            # Generate document
+                            doc_generator = DocumentGenerator()
+                            temp_path, filename = doc_generator.generate_from_template(form_data, device_type)
+                            
+                            # Read the generated file
+                            with open(temp_path, 'rb') as f:
+                                file_content = f.read()
+                            
+                            # Send fax
+                            fax_result = humblefax.send_fax(fax_number, file_content, filename, form_data.get('name'))
+                            
+                            if fax_result['success']:
+                                # Save fax record to database
+                                FaxRecord.objects.create(
+                                    fax_id=fax_result.get('fax_id', ''),
+                                    to_number=fax_number,
+                                    from_number=humblefax_config.from_number or '+1234567890',
+                                    status='sent',
+                                    subject=f"Medical Order - {device_type.replace('_', ' ').title()}",
+                                    patient_name=form_data.get('name', ''),
+                                    device_type=device_type
+                                )
+                                
+                                results.append(f"✓ Record {i+1} ({form_data.get('name', 'Unknown')}): Fax sent successfully to {fax_number}")
+                                successful_sends += 1
+                            else:
+                                results.append(f"✗ Record {i+1} ({form_data.get('name', 'Unknown')}): Fax failed - {fax_result.get('error', 'Unknown error')}")
+                                failed_sends += 1
+                            
+                            # Clean up temporary file
+                            os.remove(temp_path)
+                            
+                        except Exception as e:
+                            results.append(f"✗ Record {i+1} ({form_data.get('name', 'Unknown')}): Error - {str(e)}")
+                            failed_sends += 1
+                            continue
+                    
+                    # Return results
+                    return HttpResponse("""
+                        <div style='text-align: center; padding: 50px;'>
+                            <h2 style='color: {};'>Bulk Fax Results</h2>
+                            <p>Successfully sent: <strong>{}</strong></p>
+                            <p>Failed: <strong>{}</strong></p>
+                            <br>
+                            <div style='text-align: left; max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 20px; margin: 20px;'>
+                                <h4>Detailed Results:</h4>
+                                {}
+                            </div>
+                            <br>
+                            <a href="{}" class="btn btn-primary">Send More Faxes</a>
+                            <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
+                        </div>
+                    """.format(
+                        'green' if successful_sends > 0 and failed_sends == 0 else 'orange' if successful_sends > 0 else 'red',
+                        successful_sends,
+                        failed_sends,
+                        '<br>'.join(results),
+                        request.path,
+                        reverse('dashboard')
+                    ))
+                else:
+                    # Just generate documents for download
+                    # Generate documents for each record
+                    doc_generator = DocumentGenerator()
+                    generated_files = []
+                    
+                    for i, record in enumerate(records):
+                        try:
+                            # Convert CSV record to form data format
+                            form_data = {
+                                'name': record.get('name', ''),
+                                'phone': record.get('phone', ''),
+                                'address': record.get('address', ''),
+                                'city': record.get('city', ''),
+                                'state': record.get('state', ''),
+                                'zip': record.get('zip', ''),
+                                'dob': record.get('dob', ''),
+                                'medicare': record.get('medicare', ''),
+                                'pcp_name': record.get('pcp_name', ''),
+                                'pcp_address': record.get('pcp_address', ''),
+                                'pcp_city': record.get('pcp_city', ''),
+                                'pcp_state': record.get('pcp_state', ''),
+                                'pcp_zip': record.get('pcp_zip', ''),
+                                'pcp_phone': record.get('pcp_phone', ''),
+                                'pcp_fax': record.get('pcp_fax', ''),
+                                'pcp_npi': record.get('pcp_npi', ''),
+                            }
+                            
+                            # Generate document
+                            temp_path, filename = doc_generator.generate_from_template(form_data, device_type)
+                            generated_files.append((temp_path, filename))
+                            
+                        except Exception as e:
+                            print(f"Error processing record {i+1}: {e}")
+                            continue
+                    
+                    if not generated_files:
+                        return HttpResponse("Failed to generate any documents. Please check your CSV format.")
+                    
+                    # Create a ZIP file containing all generated documents
+                    import zipfile
+                    zip_path = os.path.join(tempfile.gettempdir(), f"bulk_fax_{device_type}.zip")
+                    
+                    with zipfile.ZipFile(zip_path, 'w') as zipf:
+                        for temp_path, filename in generated_files:
+                            zipf.write(temp_path, filename)
+                            # Clean up individual temp files
+                            os.remove(temp_path)
+                    
+                    # Read and return the ZIP file
+                    with open(zip_path, 'rb') as f:
+                        zip_content = f.read()
+                    
+                    # Clean up ZIP file
+                    os.remove(zip_path)
+                    
+                    # Return the ZIP file for download
+                    response = HttpResponse(zip_content, content_type='application/zip')
+                    response['Content-Disposition'] = f'attachment; filename="bulk_fax_{device_type}.zip"'
+                    return response
                 
             except Exception as e:
                 return HttpResponse("""
