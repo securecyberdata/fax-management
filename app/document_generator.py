@@ -134,7 +134,7 @@ class DocumentGenerator:
             return self.generate_fax_document(form_data, device_type)
     
     def _replace_placeholders(self, doc, form_data, device_type):
-        """Replace placeholders in the template document"""
+        """Replace placeholders in the template document while preserving formatting"""
         
         # Define replacement mappings
         replacements = {
@@ -159,17 +159,71 @@ class DocumentGenerator:
             '{{cgm}}': device_type.replace('_', ' ').title(),
         }
         
-        # Replace text in paragraphs
+        # Replace text in paragraphs while preserving formatting
         for paragraph in doc.paragraphs:
-            for placeholder, value in replacements.items():
-                if placeholder in paragraph.text:
-                    paragraph.text = paragraph.text.replace(placeholder, str(value))
+            self._replace_in_paragraph(paragraph, replacements)
         
-        # Replace text in tables
+        # Replace text in tables while preserving formatting
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
-                        for placeholder, value in replacements.items():
-                            if placeholder in paragraph.text:
-                                paragraph.text = paragraph.text.replace(placeholder, str(value))
+                        self._replace_in_paragraph(paragraph, replacements)
+    
+    def _replace_in_paragraph(self, paragraph, replacements):
+        """Replace placeholders in a paragraph while preserving formatting"""
+        # Get the full paragraph text to check for placeholders
+        full_text = paragraph.text
+        
+        for placeholder, value in replacements.items():
+            if placeholder in full_text:
+                # Find the placeholder position in the full text
+                start_pos = full_text.find(placeholder)
+                if start_pos != -1:
+                    # Find which runs contain parts of the placeholder
+                    current_pos = 0
+                    placeholder_start_run = None
+                    placeholder_end_run = None
+                    placeholder_start_pos = None
+                    placeholder_end_pos = None
+                    
+                    # Find the start and end runs for the placeholder
+                    for i, run in enumerate(paragraph.runs):
+                        run_length = len(run.text)
+                        if current_pos <= start_pos < current_pos + run_length:
+                            placeholder_start_run = i
+                            placeholder_start_pos = start_pos - current_pos
+                        if current_pos <= start_pos + len(placeholder) - 1 < current_pos + run_length:
+                            placeholder_end_run = i
+                            placeholder_end_pos = start_pos + len(placeholder) - current_pos
+                        current_pos += run_length
+                    
+                    if placeholder_start_run is not None and placeholder_end_run is not None:
+                        # Replace the placeholder across multiple runs if necessary
+                        if placeholder_start_run == placeholder_end_run:
+                            # Placeholder is in a single run
+                            run = paragraph.runs[placeholder_start_run]
+                            before_text = run.text[:placeholder_start_pos]
+                            after_text = run.text[placeholder_end_pos + 1:]
+                            run.text = before_text + str(value) + after_text
+                        else:
+                            # Placeholder spans multiple runs
+                            # Clear the first run and put the replacement value
+                            first_run = paragraph.runs[placeholder_start_run]
+                            first_run.text = first_run.text[:placeholder_start_pos] + str(value)
+                            
+                            # Clear the middle runs
+                            for i in range(placeholder_start_run + 1, placeholder_end_run):
+                                paragraph.runs[i].text = ""
+                            
+                            # Clear the last run
+                            last_run = paragraph.runs[placeholder_end_run]
+                            last_run.text = last_run.text[placeholder_end_pos + 1:]
+                            
+                            # If the last run is empty, remove it
+                            if not last_run.text.strip():
+                                # We can't easily remove runs, so just clear the text
+                                last_run.text = ""
+                        
+                        # Update the full text for next iteration
+                        full_text = paragraph.text
