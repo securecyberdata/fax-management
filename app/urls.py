@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('',views.dashboard, name='dashboard'),
+    path('api-config/', views.api_configuration, name='api_configuration'),
     path('single-fax/',views.new, name='new'),
     path('genknee', views.genknee, name='genknee'),
     path('sendfax/',views.sendfax, name='sendfax'),

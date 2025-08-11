@@ -1,0 +1,290 @@
+{% extends 'app/base.html' %}
+
+{% block title %}API Configuration - CGM Fax Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-cog"></i> API Configuration
+            </h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="row">
+                <!-- Telnyx Configuration -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-fax"></i> Telnyx Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="service" value="telnyx">
+                                
+                                <div class="mb-3">
+                                    <label for="{{ telnyx_form.api_key.id_for_label }}" class="form-label">
+                                        API Key <span class="text-danger">*</span>
+                                    </label>
+                                    {{ telnyx_form.api_key }}
+                                    {% if telnyx_form.api_key.errors %}
+                                        <div class="text-danger">{{ telnyx_form.api_key.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ telnyx_form.from_number.id_for_label }}" class="form-label">
+                                        From Number <span class="text-danger">*</span>
+                                    </label>
+                                    {{ telnyx_form.from_number }}
+                                    {% if telnyx_form.from_number.errors %}
+                                        <div class="text-danger">{{ telnyx_form.from_number.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Your Telnyx phone number (e.g., +1234567890)</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Telnyx Config
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- HumbleFax Configuration -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-fax"></i> HumbleFax Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="service" value="humblefax">
+                                
+                                <div class="mb-3">
+                                    <label for="{{ humblefax_form.api_key.id_for_label }}" class="form-label">
+                                        Access Key <span class="text-danger">*</span>
+                                    </label>
+                                    {{ humblefax_form.api_key }}
+                                    {% if humblefax_form.api_key.errors %}
+                                        <div class="text-danger">{{ humblefax_form.api_key.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ humblefax_form.secret_key.id_for_label }}" class="form-label">
+                                        Secret Key <span class="text-danger">*</span>
+                                    </label>
+                                    {{ humblefax_form.secret_key }}
+                                    {% if humblefax_form.secret_key.errors %}
+                                        <div class="text-danger">{{ humblefax_form.secret_key.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ humblefax_form.from_number.id_for_label }}" class="form-label">
+                                        From Number <span class="text-danger">*</span>
+                                    </label>
+                                    {{ humblefax_form.from_number }}
+                                    {% if humblefax_form.from_number.errors %}
+                                        <div class="text-danger">{{ humblefax_form.from_number.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Your HumbleFax phone number</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Save HumbleFax Config
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Twilio Configuration -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-sms"></i> Twilio Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="service" value="twilio">
+                                
+                                <div class="mb-3">
+                                    <label for="{{ twilio_form.account_sid.id_for_label }}" class="form-label">
+                                        Account SID <span class="text-danger">*</span>
+                                    </label>
+                                    {{ twilio_form.account_sid }}
+                                    {% if twilio_form.account_sid.errors %}
+                                        <div class="text-danger">{{ twilio_form.account_sid.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ twilio_form.auth_token.id_for_label }}" class="form-label">
+                                        Auth Token <span class="text-danger">*</span>
+                                    </label>
+                                    {{ twilio_form.auth_token }}
+                                    {% if twilio_form.auth_token.errors %}
+                                        <div class="text-danger">{{ twilio_form.auth_token.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ twilio_form.from_number.id_for_label }}" class="form-label">
+                                        From Number <span class="text-danger">*</span>
+                                    </label>
+                                    {{ twilio_form.from_number }}
+                                    {% if twilio_form.from_number.errors %}
+                                        <div class="text-danger">{{ twilio_form.from_number.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Your Twilio phone number</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-save"></i> Save Twilio Config
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Test Connections -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-plug"></i> Test Connections
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-success" onclick="testHumbleFax()">
+                                    <i class="fas fa-fax"></i> Test HumbleFax
+                                </button>
+                                <button class="btn btn-outline-info" onclick="testTwilio()">
+                                    <i class="fas fa-sms"></i> Test Twilio
+                                </button>
+                            </div>
+                            
+                            <div id="test-results" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle"></i> Configuration Instructions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6><i class="fas fa-fax text-primary"></i> Telnyx</h6>
+                                    <ul class="small">
+                                        <li>Get your API key from <a href="https://portal.telnyx.com/" target="_blank">Telnyx Portal</a></li>
+                                        <li>Configure your fax connection ID</li>
+                                        <li>Set your sender phone number</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><i class="fas fa-fax text-success"></i> HumbleFax</h6>
+                                    <ul class="small">
+                                        <li>Get credentials from <a href="https://humblefax.com/" target="_blank">HumbleFax</a></li>
+                                        <li>Enter your access key and secret</li>
+                                        <li>Set your sender phone number</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><i class="fas fa-sms text-info"></i> Twilio</h6>
+                                    <ul class="small">
+                                        <li>Get credentials from <a href="https://www.twilio.com/" target="_blank">Twilio Console</a></li>
+                                        <li>Enter your Account SID and Auth Token</li>
+                                        <li>Set your sender phone number</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testHumbleFax() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    button.disabled = true;
+    
+    fetch('/test-humblefax/')
+        .then(response => response.json())
+        .then(data => {
+            const resultsDiv = document.getElementById('test-results');
+            if (data.status === 'success') {
+                resultsDiv.innerHTML = `<div class="alert alert-success">✓ HumbleFax: ${data.message}</div>`;
+            } else {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">✗ HumbleFax: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = `<div class="alert alert-danger">✗ HumbleFax: Connection failed</div>`;
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function testTwilio() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    button.disabled = true;
+    
+    fetch('/test-twilio/')
+        .then(response => response.json())
+        .then(data => {
+            const resultsDiv = document.getElementById('test-results');
+            if (data.status === 'success') {
+                resultsDiv.innerHTML = `<div class="alert alert-success">✓ Twilio: ${data.message}</div>`;
+            } else {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">✗ Twilio: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = `<div class="alert alert-danger">✗ Twilio: Connection failed</div>`;
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+</script>
+{% endblock %} 
