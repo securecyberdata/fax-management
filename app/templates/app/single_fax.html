@@ -1,0 +1,257 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Single Fax Generation - Fax Generation System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-file-medical me-2"></i>Single Fax Generation
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'genknee' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Patient Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-user me-2"></i>Patient Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Patient's Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dob" class="form-label">Date of Birth *</label>
+                                <input type="text" class="form-control" id="dob" name="dob" placeholder="MM/DD/YYYY" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="text" class="form-control" id="phone" name="phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="address" class="form-label">Address *</label>
+                                <input type="text" class="form-control" id="address" name="address" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="city" class="form-label">City *</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="state" class="form-label">State *</label>
+                                <input type="text" class="form-control" id="state" name="state" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="zip" class="form-label">ZIP Code *</label>
+                                <input type="text" class="form-control" id="zip" name="zip" required>
+                            </div>
+                        </div>
+
+                        <!-- Insurance Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-shield-alt me-2"></i>Insurance Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="insurance" class="form-label">Insurance Type</label>
+                                <input type="text" class="form-control" id="insurance" name="insurance" value="Medicare" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="medicare" class="form-label">Medicare Number *</label>
+                                <input type="text" class="form-control" id="medicare" name="medicare" required>
+                            </div>
+                        </div>
+
+                        <!-- PCP Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-user-md me-2"></i>Primary Care Physician (PCP) Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pcp_name" class="form-label">PCP Name *</label>
+                                <input type="text" class="form-control" id="pcp_name" name="pcp_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pcp_phone" class="form-label">PCP Phone *</label>
+                                <input type="text" class="form-control" id="pcp_phone" name="pcp_phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pcp_fax" class="form-label">PCP Fax *</label>
+                                <input type="text" class="form-control" id="pcp_fax" name="pcp_fax" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pcp_npi" class="form-label">PCP NPI *</label>
+                                <input type="text" class="form-control" id="pcp_npi" name="pcp_npi" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="pcp_address" class="form-label">PCP Address *</label>
+                                <input type="text" class="form-control" id="pcp_address" name="pcp_address" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="pcp_city" class="form-label">PCP City *</label>
+                                <input type="text" class="form-control" id="pcp_city" name="pcp_city" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="pcp_state" class="form-label">PCP State *</label>
+                                <input type="text" class="form-control" id="pcp_state" name="pcp_state" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="pcp_zip" class="form-label">PCP ZIP *</label>
+                                <input type="text" class="form-control" id="pcp_zip" name="pcp_zip" required>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Additional Information
+                                </h5>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="height" class="form-label">Height</label>
+                                <input type="text" class="form-control" id="height" name="height">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="weight" class="form-label">Weight</label>
+                                <input type="text" class="form-control" id="weight" name="weight">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="date" class="form-label">Date *</label>
+                                <input type="text" class="form-control" id="date" name="date" placeholder="MM/DD/YYYY" required>
+                            </div>
+                        </div>
+
+                        <!-- Order Type Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-tags me-2"></i>Order Type
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="cgm" value="cgm" checked>
+                                            <label class="form-check-label" for="cgm">
+                                                <i class="fas fa-heartbeat me-1"></i>CGM
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="back" value="back">
+                                            <label class="form-check-label" for="back">
+                                                <i class="fas fa-user me-1"></i>Back Brace
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="ankle" value="ankle">
+                                            <label class="form-check-label" for="ankle">
+                                                <i class="fas fa-shoe-prints me-1"></i>Ankle/Foot Brace
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="elbow" value="elbow">
+                                            <label class="form-check-label" for="elbow">
+                                                <i class="fas fa-hand-paper me-1"></i>Elbow Brace
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="shoulder" value="shoulder">
+                                            <label class="form-check-label" for="shoulder">
+                                                <i class="fas fa-user me-1"></i>Shoulder Brace
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="hip" value="hip">
+                                            <label class="form-check-label" for="hip">
+                                                <i class="fas fa-user me-1"></i>Hip Brace
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="wrist" value="wrist">
+                                            <label class="form-check-label" for="wrist">
+                                                <i class="fas fa-hand-paper me-1"></i>Wrist Brace
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="knee_good" value="knee_good">
+                                            <label class="form-check-label" for="knee_good">
+                                                <i class="fas fa-walking me-1"></i>Knee Brace (Good)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="brace" id="knee_bad" value="knee_bad">
+                                            <label class="form-check-label" for="knee_bad">
+                                                <i class="fas fa-walking me-1"></i>Knee Brace (Bad)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="auto_send" name="auto_send" value="true">
+                                        <label class="form-check-label" for="auto_send">
+                                            <i class="fas fa-paper-plane me-2"></i>Automatically send fax to PCP after generation
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        If checked, the fax will be automatically sent to the PCP fax number provided above.
+                                    </small>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-file-medical me-2"></i>Generate Fax Document
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

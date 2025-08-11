@@ -1,0 +1,92 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Test HumbleFax Connection{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plug me-2"></i>
+                        Test HumbleFax API Connection
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        This page allows you to test the connection to the HumbleFax API using your configured Access Key and Secret Key.
+                    </p>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-wifi me-2"></i>
+                                Test Connection
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="mt-4">
+                        <h5>Configuration Check</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Access Key
+                                <span class="badge bg-{% if 'your_humblefax_access_key_here' in '{{ settings.HUMBLEFAX_ACCESS_KEY }}' %}warning{% else %}success{% endif %}">
+                                    {% if 'your_humblefax_access_key_here' in '{{ settings.HUMBLEFAX_ACCESS_KEY }}' %}
+                                        Not Configured
+                                    {% else %}
+                                        Configured
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Secret Key
+                                <span class="badge bg-{% if 'your_humblefax_secret_key_here' in '{{ settings.HUMBLEFAX_SECRET_KEY }}' %}warning{% else %}success{% endif %}">
+                                    {% if 'your_humblefax_secret_key_here' in '{{ settings.HUMBLEFAX_SECRET_KEY }}' %}
+                                        Not Configured
+                                    {% else %}
+                                        Configured
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                From Number
+                                <span class="badge bg-{% if '+1234567890' in '{{ settings.HUMBLEFAX_FROM_NUMBER }}' %}warning{% else %}success{% endif %}">
+                                    {% if '+1234567890' in '{{ settings.HUMBLEFAX_FROM_NUMBER }}' %}
+                                        Default
+                                    {% else %}
+                                        Configured
+                                    {% endif %}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Next Steps</h5>
+                        <ol>
+                            <li>Configure your HumbleFax Access Key and Secret Key in settings or environment variables</li>
+                            <li>Set your verified fax number as the "From" number</li>
+                            <li>Click "Test Connection" to verify the API integration</li>
+                            <li>Once successful, you can use the Single Fax and Bulk Fax generators</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

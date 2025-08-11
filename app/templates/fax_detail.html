@@ -1,0 +1,230 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Fax Details - {{ fax_id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Fax Details
+                    </h3>
+                    <a href="{% url 'fax_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to History
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if error_msg %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>{{ error_msg }}
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            <!-- Fax Information -->
+                            <div class="col-md-8">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-info-circle me-2"></i>Fax Information
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Fax ID:</dt>
+                                                    <dd class="col-sm-8">
+                                                        <code>{{ fax_id }}</code>
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">Status:</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if status == 'sent' or status == 'delivered' %}
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check me-1"></i>{{ status|title }}
+                                                            </span>
+                                                        {% elif status == 'failed' %}
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-times me-1"></i>{{ status|title }}
+                                                            </span>
+                                                        {% elif status == 'pending' or status == 'queued' %}
+                                                            <span class="badge bg-warning">
+                                                                <i class="fas fa-clock me-1"></i>{{ status|title }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">{{ status|title }}</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">Direction:</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if direction == 'outbound' %}
+                                                            <span class="badge bg-primary">
+                                                                <i class="fas fa-paper-plane me-1"></i>Sent
+                                                            </span>
+                                                        {% elif direction == 'inbound' %}
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-download me-1"></i>Received
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">{{ direction|title }}</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">Pages:</dt>
+                                                    <dd class="col-sm-8">
+                                                        <span class="badge bg-light text-dark">{{ num_pages }}</span>
+                                                    </dd>
+                                                </dl>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">To:</dt>
+                                                    <dd class="col-sm-8">
+                                                        <span class="badge bg-info">{{ to_number }}</span>
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">From:</dt>
+                                                    <dd class="col-sm-8">
+                                                        <span class="badge bg-secondary">{{ from_number }}</span>
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">File Size:</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if file_size %}
+                                                            {{ file_size|filesizeformat }}
+                                                        {% else %}
+                                                            <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">Resolution:</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if resolution %}
+                                                            <span class="badge bg-light text-dark">{{ resolution }}</span>
+                                                        {% else %}
+                                                            <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                </dl>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Subject and Message -->
+                                {% if subject or message %}
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-envelope me-2"></i>Content Details
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if subject %}
+                                                <div class="mb-3">
+                                                    <strong>Subject:</strong>
+                                                    <p class="mb-0">{{ subject }}</p>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            {% if message %}
+                                                <div>
+                                                    <strong>Message:</strong>
+                                                    <p class="mb-0">{{ message }}</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Failure Information -->
+                                {% if failure_reason %}
+                                    <div class="card mb-4 border-danger">
+                                        <div class="card-header bg-danger text-white">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>Failure Information
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <strong>Failure Reason:</strong>
+                                            <p class="mb-0 text-danger">{{ failure_reason }}</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Sidebar -->
+                            <div class="col-md-4">
+                                <!-- Timestamps -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-clock me-2"></i>Timestamps
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <dl class="row">
+                                            <dt class="col-sm-5">Created:</dt>
+                                            <dd class="col-sm-7">
+                                                <small class="text-muted">{{ created_at|date:"M d, Y H:i" }}</small>
+                                            </dd>
+                                            
+                                            <dt class="col-sm-5">Updated:</dt>
+                                            <dd class="col-sm-7">
+                                                <small class="text-muted">{{ updated_at|date:"M d, Y H:i" }}</small>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-tools me-2"></i>Actions
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-grid gap-2">
+                                            {% if direction == 'outbound' %}
+                                                <form method="POST" action="{% url 'fax_resend' fax_id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-warning w-100" onclick="return confirm('Are you sure you want to resend this fax?')">
+                                                        <i class="fas fa-redo me-2"></i>Resend Fax
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            
+                                            {% if media_url %}
+                                                <a href="{{ media_url }}" target="_blank" class="btn btn-primary w-100">
+                                                    <i class="fas fa-download me-2"></i>Download Fax
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <a href="{% url 'fax_list' %}" class="btn btn-outline-secondary w-100">
+                                                <i class="fas fa-list me-2"></i>Back to History
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

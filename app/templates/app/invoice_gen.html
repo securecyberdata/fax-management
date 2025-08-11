@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Generator</title>
+</head>
+<body>
+<h3> Generate Invoice</h3>
+<form method="POST" action={% url 'geninvoice' %} />
+{% csrf_token %}
+Receiver's Name: <input type="text" name="name"/> <br>
+Receiver's Email: <input type="text" name="email" /> <br>
+Description: <input type="text" name="desc" value="CGM Lead/DME Lead"/> <br>
+Patient's Name: <input type="text" name="patient_name"> <br>
+Lead Type: <input type="text" name="lead_type" value="Back Brace/Knee Brace/Insulin/ Non Insulin"> <br>
+Quantity: <input type="text" name="quantity"> <br>
+Total: <input type="text" name="total"> <br>
+<input type="submit" value="Generate Invoice">
+</form>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Generator</title>
+</head>
+<body>
+<h3> Generate DO for CGM</h3>
+<form method="POST" action={% url 'newpdf' %} />
+{% csrf_token %}
+Patient's Name: <input type="text" name="name"/> <br>
+Patient's DOB: <input type="text" name="dob" /> <br>
+Patient's Email: <input type="text" name="email" /> <br>
+Patient's Phone: <input type="text" name="phone" /> <br>
+Patient's Address: <input type="text" name="address"> <br>
+Patient's City: <input type="text" name="city"> <br>
+Patient's State: <input type="text" name="state"> <br>
+Patient's ZIP: <input type="text" name="zip"> <br>
+Patient's Insurance: <input type="text" name="insurance"> <br>
+Patient's Medicare Numb: <input type="text" name="medicare"> <br>
+<input type="submit" value="Generate">
+</form>
+</body>
+</html>

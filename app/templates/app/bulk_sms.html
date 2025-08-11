@@ -1,0 +1,207 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Bulk SMS - Twilio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Bulk SMS Processing
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form method="POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.file.id_for_label }}" class="form-label">
+                                        <i class="fas fa-upload me-1"></i>{{ form.file.label }}
+                                    </label>
+                                    {{ form.file }}
+                                    {% if form.file.errors %}
+                                        <div class="text-danger small">{{ form.file.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.file.help_text }}</div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                                        <i class="fas fa-arrow-left me-1"></i>Back
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-1"></i>Send Bulk SMS
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>File Requirements
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <h6>Required Columns:</h6>
+                                    <ul class="list-unstyled small">
+                                        <li><code>name</code> - Patient name</li>
+                                        <li><code>pcp_name</code> - Doctor/PCP name</li>
+                                        <li><code>phone</code> - Patient phone number</li>
+                                        <li><code>device_name</code> - Device name</li>
+                                    </ul>
+                                    
+                                    <h6>Supported Formats:</h6>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-file-csv text-success me-1"></i>CSV files (.csv)</li>
+                                        <li><i class="fas fa-file-excel text-success me-1"></i>Excel files (.xlsx, .xls)</li>
+                                    </ul>
+                                    
+                                    <h6>Features:</h6>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check text-success me-1"></i>Mobile number validation</li>
+                                        <li><i class="fas fa-check text-success me-1"></i>Automatic formatting</li>
+                                        <li><i class="fas fa-check text-success me-1"></i>Bulk processing</li>
+                                        <li><i class="fas fa-check text-success me-1"></i>Detailed results</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-eye me-1"></i>SMS Message Preview
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="border rounded p-3 bg-white">
+                                        <strong>SMS Template:</strong><br>
+                                        <span class="text-muted">Hey! [Patient Name]! Your Signed Prescription Order has been Received from Doctor [Doctor Name] for [Device Name]. There is no Out-Of-Pocket Expense. Everything will be covered by Medicare.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if results %}
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="mb-3">
+                                    <i class="fas fa-chart-bar me-2"></i>Processing Results
+                                </h4>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title">{{ success_count }}</h5>
+                                                <p class="card-text">Successful</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-danger text-white">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title">{{ error_count }}</h5>
+                                                <p class="card-text">Failed</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-info text-white">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title">{{ total_count }}</h5>
+                                                <p class="card-text">Total</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-warning text-white">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title">
+                                                    {% if total_count > 0 %}
+                                                        {{ success_count|floatformat:0 }}/{{ total_count|floatformat:0 }}
+                                                    {% else %}
+                                                        0/0
+                                                    {% endif %}
+                                                </h5>
+                                                <p class="card-text">Success Rate</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Patient Name</th>
+                                                <th>Phone Number</th>
+                                                <th>Status</th>
+                                                <th>Message</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for result in results %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ result.name }}</td>
+                                                    <td>{{ result.phone }}</td>
+                                                    <td>
+                                                        {% if result.success %}
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check me-1"></i>Success
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-times me-1"></i>Failed
+                                                            </span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted">{{ result.message }}</small>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div>
+                                        <a href="{% url 'bulk_sms' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-plus me-1"></i>Send Another Batch
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-home me-1"></i>Back to Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

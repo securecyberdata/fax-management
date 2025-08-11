@@ -1,0 +1,7 @@
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!--<input type="file" name="fax_file">-->
+    To: <input type="text" name="to"/> <br>
+    Fax_URL: <input type="text" name="fax_url"/> <br>
+    <input type="submit" value="Send Fax">
+</form>

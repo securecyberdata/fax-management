@@ -1,0 +1,149 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Send Single SMS - Twilio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-sms me-2"></i>Send Single SMS
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form method="POST">
+                                {% csrf_token %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                                            <i class="fas fa-user me-1"></i>{{ form.name.label }}
+                                        </label>
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                            <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.pcp_name.id_for_label }}" class="form-label">
+                                            <i class="fas fa-user-md me-1"></i>{{ form.pcp_name.label }}
+                                        </label>
+                                        {{ form.pcp_name }}
+                                        {% if form.pcp_name.errors %}
+                                            <div class="text-danger small">{{ form.pcp_name.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                            <i class="fas fa-phone me-1"></i>{{ form.phone.label }}
+                                        </label>
+                                        {{ form.phone }}
+                                        {% if form.phone.errors %}
+                                            <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+                                        {% endif %}
+                                        <div class="form-text">Enter a valid mobile phone number</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.device_name.id_for_label }}" class="form-label">
+                                            <i class="fas fa-medical-kit me-1"></i>{{ form.device_name.label }}
+                                        </label>
+                                        {{ form.device_name }}
+                                        {% if form.device_name.errors %}
+                                            <div class="text-danger small">{{ form.device_name.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                                        <i class="fas fa-arrow-left me-1"></i>Back
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-1"></i>Send SMS
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>SMS Preview
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="sms-preview" class="border rounded p-3 bg-white">
+                                        <small class="text-muted">Enter the form details to see the SMS preview</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-cog me-1"></i>Features
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check text-success me-1"></i>Mobile number validation</li>
+                                        <li><i class="fas fa-check text-success me-1"></i>Automatic formatting</li>
+                                        <li><i class="fas fa-check text-success me-1"></i>Twilio integration</li>
+                                        <li><i class="fas fa-check text-success me-1"></i>Real-time delivery status</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live SMS preview
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+    const pcpInput = document.getElementById('{{ form.pcp_name.id_for_label }}');
+    const deviceInput = document.getElementById('{{ form.device_name.id_for_label }}');
+    const previewDiv = document.getElementById('sms-preview');
+    
+    function updatePreview() {
+        const name = nameInput.value || '{{ form.name.initial|default:"[Patient Name]" }}';
+        const pcp = pcpInput.value || '{{ form.pcp_name.initial|default:"[Doctor Name]" }}';
+        const device = deviceInput.value || '{{ form.device_name.initial|default:"[Device Name]" }}';
+        
+        const message = `Hey! ${name}! Your Signed Prescription Order has been Received from Doctor ${pcp} for ${device}. There is no Out-Of-Pocket Expense. Everything will be covered by Medicare.`;
+        
+        previewDiv.innerHTML = `<strong>SMS Message:</strong><br><span class="text-muted">${message}</span>`;
+    }
+    
+    nameInput.addEventListener('input', updatePreview);
+    pcpInput.addEventListener('input', updatePreview);
+    deviceInput.addEventListener('input', updatePreview);
+    
+    // Initial preview
+    updatePreview();
+});
+</script>
+{% endblock %} 

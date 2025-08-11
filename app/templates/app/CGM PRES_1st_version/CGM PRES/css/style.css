@@ -1,0 +1,29 @@
+*{
+    margin: 0%;
+    padding: 0%;
+}
+.starting{
+    font-weight: 700;
+    
+
+}
+.box{
+    border: black solid 1px;
+    padding: 10px;
+}
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 10px;
+  }
+.facesheet{
+    font-size: 12px;
+}
+.med{
+    color: darkblue;
+    font-weight: 600;
+}
+.med1{
+    color: darkblue;
+    
+}
