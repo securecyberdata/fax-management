@@ -1,6 +1,8 @@
 import os
 import base64
 import logging
+import csv
+import tempfile
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
@@ -11,6 +13,7 @@ from .forms import (
     TelnyxConfigForm, HumbleFaxConfigForm, TwilioConfigForm,
     SendFaxForm, SendSMSForm, BulkFaxForm, BulkSMSForm, SingleFaxForm, BulkUploadForm
 )
+from .document_generator import DocumentGenerator
 from .humblefax_service import HumbleFaxService
 from .twilio_sms_service import TwilioSMSService
 import requests
@@ -99,55 +102,59 @@ def new(request): #type new to access docx file
         if form.is_valid():
             # Process the form data and generate fax document
             device_type = form.cleaned_data['device_type']
-            patient_name = form.cleaned_data['name']
             
-            # For now, just show success message with the selected document
-            document_map = {
-                'cgm': 'do.docx (CGM)',
-                'ankle': 'Ankle_DO.docx (Ankle Brace)',
-                'knee': 'Knee_DO.docx (Knee Brace)',
-                'back': 'Back_DO.docx (Back Brace)',
-                'hip': 'Hip_DO.docx (Hip Brace)',
-                'shoulder': 'Shoulder_DO.docx (Shoulder Brace)',
-                'wrist': 'Wrist_DO.docx (Wrist Brace)',
+            # Convert form data to dictionary
+            form_data = {
+                'name': form.cleaned_data.get('name', ''),
+                'phone': form.cleaned_data.get('phone', ''),
+                'address': form.cleaned_data.get('address', ''),
+                'city': form.cleaned_data.get('city', ''),
+                'state': form.cleaned_data.get('state', ''),
+                'zip': form.cleaned_data.get('zip', ''),
+                'dob': form.cleaned_data.get('dob', ''),
+                'medicare': form.cleaned_data.get('medicare', ''),
+                'pcp_name': form.cleaned_data.get('pcp_name', ''),
+                'pcp_address': form.cleaned_data.get('pcp_address', ''),
+                'pcp_city': form.cleaned_data.get('pcp_city', ''),
+                'pcp_state': form.cleaned_data.get('pcp_state', ''),
+                'pcp_zip': form.cleaned_data.get('pcp_zip', ''),
+                'pcp_phone': form.cleaned_data.get('pcp_phone', ''),
+                'pcp_fax': form.cleaned_data.get('pcp_fax', ''),
+                'pcp_npi': form.cleaned_data.get('pcp_npi', ''),
             }
             
-            selected_doc = document_map.get(device_type, 'Unknown Document')
-            
-            return HttpResponse("""
-                <div style='text-align: center; padding: 50px;'>
-                    <h2 style='color: green;'>✓ Fax Document Generated Successfully!</h2>
-                    <p>Your fax document has been created with the following information:</p>
-                    <div style='text-align: left; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px;'>
-                        <p><strong>Device:</strong> {}</p>
-                        <p><strong>Document:</strong> {}</p>
-                        <p><strong>Patient:</strong> {}</p>
-                        <p><strong>Phone:</strong> {}</p>
-                        <p><strong>Address:</strong> {}, {}, {} {}</p>
-                        <p><strong>DOB:</strong> {}</p>
-                        <p><strong>Medicare:</strong> {}</p>
-                        <p><strong>PCP:</strong> {} - NPI: {}</p>
+            try:
+                # Generate the document
+                doc_generator = DocumentGenerator()
+                temp_path, filename = doc_generator.generate_from_template(form_data, device_type)
+                
+                # Read the generated file
+                with open(temp_path, 'rb') as f:
+                    file_content = f.read()
+                
+                # Clean up temporary file
+                os.remove(temp_path)
+                
+                # Return the file for download
+                response = HttpResponse(file_content, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+                
+            except Exception as e:
+                # If document generation fails, show error message
+                return HttpResponse("""
+                    <div style='text-align: center; padding: 50px;'>
+                        <h2 style='color: red;'>✗ Error Generating Document</h2>
+                        <p>An error occurred while generating the document: {}</p>
+                        <br>
+                        <a href="{}" class="btn btn-primary">Try Again</a>
+                        <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
                     </div>
-                    <br>
-                    <a href="{}" class="btn btn-primary">Generate Another Fax</a>
-                    <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
-                </div>
-            """.format(
-                device_type.replace('_', ' ').title(),
-                selected_doc,
-                patient_name,
-                form.cleaned_data.get('phone', 'N/A'),
-                form.cleaned_data.get('address', 'N/A'),
-                form.cleaned_data.get('city', 'N/A'),
-                form.cleaned_data.get('state', 'N/A'),
-                form.cleaned_data.get('zip', 'N/A'),
-                form.cleaned_data.get('dob', 'N/A'),
-                form.cleaned_data.get('medicare', 'N/A'),
-                form.cleaned_data.get('pcp_name', 'N/A'),
-                form.cleaned_data.get('pcp_npi', 'N/A'),
-                request.path,
-                reverse('dashboard')
-            ))
+                """.format(
+                    str(e),
+                    request.path,
+                    reverse('dashboard')
+                ))
     else:
         form = SingleFaxForm()
     
@@ -421,28 +428,93 @@ def bulk_fax_generator(request):
             device_type = form.cleaned_data['device_type']
             csv_file = form.cleaned_data['csv_file']
             
-            # For now, just show success message
-            return HttpResponse("""
-                <div style='text-align: center; padding: 50px;'>
-                    <h2 style='color: green;'>✓ Bulk Fax Generation Started!</h2>
-                    <p>Processing {} for {} devices.</p>
-                    <div style='text-align: left; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px;'>
-                        <p><strong>File:</strong> {}</p>
-                        <p><strong>Device Type:</strong> {}</p>
-                        <p><strong>Status:</strong> File uploaded successfully. Processing...</p>
+            try:
+                # Process the CSV file
+                if csv_file.name.endswith('.csv'):
+                    # Process CSV file
+                    decoded_file = csv_file.read().decode('utf-8').splitlines()
+                    reader = csv.DictReader(decoded_file)
+                    records = list(reader)
+                else:
+                    # For Excel files, we'll need to add xlrd or openpyxl support later
+                    return HttpResponse("Excel file support coming soon. Please use CSV format for now.")
+                
+                if not records:
+                    return HttpResponse("No records found in the CSV file.")
+                
+                # Generate documents for each record
+                doc_generator = DocumentGenerator()
+                generated_files = []
+                
+                for i, record in enumerate(records):
+                    try:
+                        # Convert CSV record to form data format
+                        form_data = {
+                            'name': record.get('name', ''),
+                            'phone': record.get('phone', ''),
+                            'address': record.get('address', ''),
+                            'city': record.get('city', ''),
+                            'state': record.get('state', ''),
+                            'zip': record.get('zip', ''),
+                            'dob': record.get('dob', ''),
+                            'medicare': record.get('medicare', ''),
+                            'pcp_name': record.get('pcp_name', ''),
+                            'pcp_address': record.get('pcp_address', ''),
+                            'pcp_city': record.get('pcp_city', ''),
+                            'pcp_state': record.get('pcp_state', ''),
+                            'pcp_zip': record.get('pcp_zip', ''),
+                            'pcp_phone': record.get('pcp_phone', ''),
+                            'pcp_fax': record.get('pcp_fax', ''),
+                            'pcp_npi': record.get('pcp_npi', ''),
+                        }
+                        
+                        # Generate document
+                        temp_path, filename = doc_generator.generate_from_template(form_data, device_type)
+                        generated_files.append((temp_path, filename))
+                        
+                    except Exception as e:
+                        print(f"Error processing record {i+1}: {e}")
+                        continue
+                
+                if not generated_files:
+                    return HttpResponse("Failed to generate any documents. Please check your CSV format.")
+                
+                # Create a ZIP file containing all generated documents
+                import zipfile
+                zip_path = os.path.join(tempfile.gettempdir(), f"bulk_fax_{device_type}.zip")
+                
+                with zipfile.ZipFile(zip_path, 'w') as zipf:
+                    for temp_path, filename in generated_files:
+                        zipf.write(temp_path, filename)
+                        # Clean up individual temp files
+                        os.remove(temp_path)
+                
+                # Read and return the ZIP file
+                with open(zip_path, 'rb') as f:
+                    zip_content = f.read()
+                
+                # Clean up ZIP file
+                os.remove(zip_path)
+                
+                # Return the ZIP file for download
+                response = HttpResponse(zip_content, content_type='application/zip')
+                response['Content-Disposition'] = f'attachment; filename="bulk_fax_{device_type}.zip"'
+                return response
+                
+            except Exception as e:
+                return HttpResponse("""
+                    <div style='text-align: center; padding: 50px;'>
+                        <h2 style='color: red;'>✗ Error Processing File</h2>
+                        <p>An error occurred while processing the file: {}</p>
+                        <br>
+                        <a href="{}" class="btn btn-primary">Try Again</a>
+                        <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
                     </div>
-                    <br>
-                    <a href="{}" class="btn btn-primary">Upload Another File</a>
-                    <a href="{}" class="btn btn-secondary">Back to Dashboard</a>
-                </div>
-            """.format(
-                csv_file.name,
-                device_type.replace('_', ' ').title(),
-                csv_file.name,
-                device_type.replace('_', ' ').title(),
-                request.path,
-                reverse('dashboard')
-            ))
+                """.format(
+                    str(e),
+                    request.path,
+                    reverse('dashboard')
+                ))
     else:
         form = BulkUploadForm()
     
