@@ -19,6 +19,8 @@ class FaxRecord(models.Model):
     subject = models.CharField(max_length=200, blank=True, null=True)
     num_pages = models.IntegerField(default=1)
     direction = models.CharField(max_length=10, default='outbound')
+    patient_name = models.CharField(max_length=200, blank=True, null=True)
+    device_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     

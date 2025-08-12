@@ -504,7 +504,7 @@ class HumbleFaxService:
                 "recipients": [clean_to_number],
                 "resolution": "Fine",
                 "pageSize": "Letter",
-                "includeCoversheet": True
+                "includeCoversheet": False
             }
             
             logger.info(f"Creating temporary fax with payload: {payload}")
