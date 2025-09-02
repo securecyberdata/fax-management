@@ -105,6 +105,9 @@ class BulkFaxGenerator:
                 'Hip_DO.docx': 'Hip-Brace',
                 'Elbow_DO.docx': 'Elbow-Brace',
                 'Shoulder_DO.docx': 'Shoulder-Brace',
+                'lymphodema-Arms.docx': 'Lymphodema-Arms',
+                'lymphodema-full-legs.docx': 'Lymphodema-full-legs',
+                'lymphodema-leg.docx': 'Lymphodema-leg',
             }
             fax_type = fax_type_mapping.get(template_name, 'Unknown-Type')
 

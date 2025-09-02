@@ -11,6 +11,9 @@ class SingleFaxForm(forms.Form):
         ('hip', 'Hip Brace'),
         ('shoulder', 'Shoulder Brace'),
         ('wrist', 'Wrist Brace'),
+        ('lymphodema_arms', 'Lymphodema Arms'),
+        ('lymphodema_full_legs', 'Lymphodema Full Legs'),
+        ('lymphodema_leg', 'Lymphodema Leg'),
     ]
     
     # Device Selection
@@ -199,6 +202,9 @@ class BulkUploadForm(forms.Form):
         ('hip', 'Hip Brace'),
         ('shoulder', 'Shoulder Brace'),
         ('wrist', 'Wrist Brace'),
+        ('lymphodema_arms', 'Lymphodema Arms'),
+        ('lymphodema_full_legs', 'Lymphodema Full Legs'),
+        ('lymphodema_leg', 'Lymphodema Leg'),
     ]
     
     device_type = forms.ChoiceField(

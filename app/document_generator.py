@@ -96,6 +96,9 @@ class DocumentGenerator:
             'hip': 'docs_braces/Hip_DO.docx',
             'shoulder': 'docs_braces/Shoulder_DO.docx',
             'wrist': 'docs_braces/Wrist_DO.docx',
+            'lymphodema_arms': 'lymphodema-Arms.docx',
+            'lymphodema_full_legs': 'lymphodema-full-legs.docx',
+            'lymphodema_leg': 'lymphodema-leg.docx',
         }
         
         template_file = template_map.get(device_type)
