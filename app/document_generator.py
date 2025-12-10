@@ -90,6 +90,7 @@ class DocumentGenerator:
         # Map device types to template files
         template_map = {
             'cgm': 'do.docx',
+            'cgm_pills': 'do_pills.docx',
             'ankle': 'docs_braces/Ankle_DO.docx',
             'knee': 'docs_braces/Knee_DO.docx',
             'back': 'docs_braces/Back_DO.docx',

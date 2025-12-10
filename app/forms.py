@@ -5,6 +5,7 @@ class SingleFaxForm(forms.Form):
     """Simple form for single fax generation"""
     DEVICE_CHOICES = [
         ('cgm', 'CGM (Continuous Glucose Monitor)'),
+        ('cgm_pills', 'CGM Pills'),
         ('ankle', 'Ankle Brace'),
         ('knee', 'Knee Brace'),
         ('back', 'Back Brace'),
@@ -196,6 +197,7 @@ class BulkUploadForm(forms.Form):
     """Form for bulk fax generation from CSV/Excel files"""
     DEVICE_CHOICES = [
         ('cgm', 'CGM (Continuous Glucose Monitor)'),
+         ('cgm_pills', 'CGM Pills'),
         ('ankle', 'Ankle Brace'),
         ('knee', 'Knee Brace'),
         ('back', 'Back Brace'),
